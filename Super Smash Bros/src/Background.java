@@ -10,10 +10,10 @@ import java.net.URL;
 public class Background {
 	private Image img; 	
 	private AffineTransform tx;
-	private double scale = 1.69; // image scale
+	private double scale = 1.5; // image scale
 
 	public Background(int x, int y) {
-		img = getImage("/imgs/space.gif");
+		img = getImage("/imgs/final-destination.gif");
 		tx = AffineTransform.getTranslateInstance(0, 0);
 		init(x, y); // initialize the location of the image
 	}
