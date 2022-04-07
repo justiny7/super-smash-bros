@@ -10,26 +10,28 @@ import java.net.URL;
 public class Character {
 	private Image img; 	
 	private AffineTransform tx;
-	private double scale = 0.2; // scales for images
+	private double scale = 2.0; // scales for images
 	
-	private final int bottom = 290, left = 95, right = 1170;
+	private final int width = 1456, height = 709;
+	private final int bottom = 460, left = 180, right = 1215;
 	
 	private int x, y; // coordinates
-	private int vx, vy;
+	private int vx, vy, lst, offset;
 	private int accel;
 	private int jumpCnt;
 	private long lstJump;
 
 	public Character(int x, int y) {
-		this.x = x;
-		this.y = y;
+		setPosition(x, y);
 		
+		offset = 0;
 		vx = vy = 0;
+		lst = 1;
 		accel = 0;
 		jumpCnt = 0;
 		lstJump = -1000;
 
-		img = getImage("/imgs/char.png"); // load the image for Tree
+		img = getImage("/imgs/walkright.gif");
 		tx = AffineTransform.getTranslateInstance(0, 0);
 		init(x, y);
 	}
@@ -43,6 +45,8 @@ public class Character {
 	}
 	
 	public void setVx(int vx) {
+		if (vx != 0)
+			lst = this.vx;
 		this.vx = vx;
 	}
 	public void setVy(int vy) {
@@ -50,6 +54,9 @@ public class Character {
 	}
 	public void jump() {
 		if (jumpCnt < 2 && System.currentTimeMillis() - lstJump > 250) {
+			Music jump = new Music("jump" + (1 + (int)(Math.random() * 1000000) % 3) + ".wav", false);
+			jump.play();
+			
 			++jumpCnt;
 			lstJump = System.currentTimeMillis();
 			vy = -20;
@@ -57,16 +64,49 @@ public class Character {
 		}
 	}
 	
+	public int getX() {
+		return x;
+	}
+	public int getY() {
+		return y;
+	}
+	
 	public void setPosition(int x, int y) {
 		this.x = x;
 		this.y = y;
+		offset = 0;
+		vx = vy = 0;
+		lst = 1;
+		accel = 0;
+		jumpCnt = 0;
+		lstJump = -1000;
+	}
+	public void reset(int x, int y) {
+		setPosition(x, y);
 	}
 	private void init(double a, double b) {
 		tx.setToTranslation(a, b);
 		tx.scale(scale, scale);
 	}
 	private void update() {
-		// handle change in x
+		// System.out.println(x + " " + y);
+		
+		// set correct sprite
+		if (vx > 0) {
+			img = getImage("/imgs/walkright.gif");
+			offset = -5;
+		} else if (vx < 0) {
+			img = getImage("/imgs/walkleft.gif");
+			offset = -5;
+		} else if (lst > 0) {
+			img = getImage("/imgs/idleright.gif");
+			offset = 0;
+		} else {
+			img = getImage("/imgs/idleleft.gif");
+			offset = 0;
+		}
+		
+		// handle change in x		
 		if (y <= bottom)
 			x += vx;
 		else { // bounding box under sides of stadium
@@ -96,7 +136,7 @@ public class Character {
 
 		vy += accel;
 		
-		tx.setToTranslation(x, y);
+		tx.setToTranslation(x, y + offset);
 		tx.scale(scale, scale);
 	}
 	private Image getImage(String path) {

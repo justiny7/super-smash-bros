@@ -25,11 +25,15 @@ import javax.swing.Timer;
 
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener, MouseMotionListener {
 	// game properties
-	private int width = 1456, height = 849;
-	private int bottom = 290, left = 95, right = 1170;
+	private final int width = 1456, height = 849;
+	private final int bottom = 290, left = 95, right = 1170;
+	
+	private int spawnL = width / 3, spawnR = width * 2 / 3, spawnH = height / 5;
+	private boolean resetDeath = false;
 	
 	// images + music
-	Character K = new Character(250, 290); // Kirby
+	Character K = new Character(spawnL, spawnH); // Kirby
+	Death D = new Death();
 	Background B = new Background(0, 0);
 	
 	// character properties
@@ -41,6 +45,21 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		super.paintComponent(g);
 		B.paint(g);
 		K.paint(g);
+		
+		if (K.getY() > height + 500) {
+			if (!resetDeath) {
+				Music death = new Music("deathsound.wav", false);
+				death.play();
+				D.reset();
+				resetDeath= true;
+			}
+			D.paint(g, K.getX(), K.getY());
+		}
+		
+		if (K.getY() > height + 8000) {
+			resetDeath = false;
+			K.reset(spawnL, spawnH);
+		}
 		
 		updatePosition();
 	}
