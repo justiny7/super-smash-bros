@@ -32,7 +32,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private boolean resetDeath = false;
 	
 	// images + music
-	Character K = new Character(spawnL, spawnH); // Kirby
+	Character K = new Character(spawnL, spawnH, "k"); // Kirby
 	Death D = new Death();
 	Background B = new Background(0, 0);
 	
@@ -48,34 +48,51 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		
 		if (K.getY() > height + 500) {
 			if (!resetDeath) {
-				Music death = new Music("deathsound.wav", false);
+				Music death = new Music("kosound.wav", false);
 				death.play();
 				D.reset();
 				resetDeath= true;
 			}
 			D.paint(g, K.getX(), K.getY());
+		} else {
+			updatePosition();
 		}
 		
 		if (K.getY() > height + 8000) {
 			resetDeath = false;
 			K.reset(spawnL, spawnH);
 		}
-		
-		updatePosition();
 	}
 	
 	private void updatePosition() {
-		if (pressedKeys.contains(KeyEvent.VK_D))
-			K.setVx(5);
-		else if (pressedKeys.contains(KeyEvent.VK_A))
-			K.setVx(-5);
-		else
+		if (pressedKeys.contains(KeyEvent.VK_F)) {
 			K.setVx(0);
-		
-		if (pressedKeys.contains(KeyEvent.VK_S))
-			K.setVy(20);
-		else if (pressedKeys.contains(KeyEvent.VK_W))
-			K.jump();
+			if (pressedKeys.contains(KeyEvent.VK_D) ||
+				pressedKeys.contains(KeyEvent.VK_A) ||
+				pressedKeys.contains(KeyEvent.VK_W)) {
+				K.setAttack(true);
+			} else {
+				K.setAttack(false);
+			}
+			
+			if (pressedKeys.contains(KeyEvent.VK_S))
+				K.setVy(20);
+			else if (pressedKeys.contains(KeyEvent.VK_W))
+				K.jump();
+		} else {
+			K.setAttack(false);
+			if (pressedKeys.contains(KeyEvent.VK_D))
+				K.setVx(5);
+			else if (pressedKeys.contains(KeyEvent.VK_A))
+				K.setVx(-5);
+			else
+				K.setVx(0);
+			
+			if (pressedKeys.contains(KeyEvent.VK_S))
+				K.setVy(20);
+			else if (pressedKeys.contains(KeyEvent.VK_W))
+				K.jump();
+		}
 		
 		/*
 		if (pressedKeys.contains(KeyEvent.VK_D))

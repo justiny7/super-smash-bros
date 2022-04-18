@@ -10,7 +10,7 @@ import java.net.URL;
 public class Death {
 	private Image[] img = new Image[10000];
 	private AffineTransform tx;
-	private double scale = 3.5; // image scale
+	private double scale = 4; // image scale
 	
 	private final int width = 1456, height = 849;
 	private final int cx = width / 2, cy = height / 2; // center x, center y
