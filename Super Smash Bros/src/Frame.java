@@ -27,13 +27,17 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	// game properties
 	private final int width = 1456, height = 849;
 	private final int bottom = 290, left = 95, right = 1170;
+	private final long knockbackDelay = 200;
+	private final int bboxW = 42, bboxH = 40;
 	
-	private int spawnL = width / 3, spawnR = width * 2 / 3, spawnH = height / 5;
+	private int spawnL = 445, spawnR = 948, spawnH = height / 5;
+	private long lstK = -1000, lstM = -1000;
 	private boolean resetDeath = false;
 	
 	// images + music
 	Character K = new Character(spawnL, spawnH, "k"); // Kirby
-	Death D = new Death();
+	Character M = new Character(spawnR, spawnH, "k"); // Meta Knight
+	Death DK = new Death(), DM = new Death();
 	Background B = new Background(0, 0);
 	
 	// character properties
@@ -41,30 +45,83 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private int rand(int lo, int hi) { // random number between lo and hi
 		return (int)(Math.random() * (hi - lo + 1)) + lo;
 	}
+	private long now() {
+		return System.currentTimeMillis();
+	}
 	public void paint(Graphics g) {
 		super.paintComponent(g);
 		B.paint(g);
 		K.paint(g);
+		M.paint(g);
+		
+		show(K, g);
+		show(M, g);
 		
 		if (K.getY() > height + 500) {
 			if (!resetDeath) {
 				Music death = new Music("kosound.wav", false);
 				death.play();
-				D.reset();
-				resetDeath= true;
+				DK.reset();
+				resetDeath = true;
 			}
-			D.paint(g, K.getX(), K.getY());
-		} else {
-			updatePosition();
+			DK.paint(g, K.getX(), K.getY());
+		} else if (hit(M, K)) {
+			System.out.println("M hit K!");
+		} else if (now() - lstK > knockbackDelay) {
+			updatePositionK();
 		}
 		
 		if (K.getY() > height + 8000) {
 			resetDeath = false;
 			K.reset(spawnL, spawnH);
 		}
+		
+		
+		if (M.getY() > height + 500) {
+			if (!resetDeath) {
+				Music death = new Music("kosound.wav", false);
+				death.play();
+				DM.reset();
+				resetDeath = true;
+			}
+			DM.paint(g, M.getX(), M.getY());
+		} else if (hit(K, M)) {
+			System.out.println("K hit M!");
+		} else if (now() - lstM > knockbackDelay) {
+			updatePositionM();
+		}
+		
+		if (M.getY() > height + 8000) {
+			resetDeath = false;
+			M.reset(spawnR, spawnH);
+		}
 	}
 	
-	private void updatePosition() {
+	private void show(Character c, Graphics g) {
+		// show bounding box + attack point
+		int[] pt = c.attackPoint();
+		g.setColor(Color.red);
+		g.fillRect(pt[0], pt[1], 10, 10);
+		g.drawRect(c.getX() + 3, c.getY() + 10, bboxW, bboxH);
+	}
+	private boolean between(int lo, int hi, int x) { // helper function for checking if lo <= x <= hi
+		return lo <= x && x <= hi;
+	}
+	
+	private boolean hit(Character attacker, Character victim) {
+		int[] pt = attacker.attackPoint();
+		if (pt[0] == -10000)
+			return false;
+		
+		int hl = pt[0], hr = pt[0] + 10, hb = pt[1], ht = pt[1] + 10;
+		int al = attacker.getX() + 3, ar = al + bboxW, ab = attacker.getY() + 10, at = ab + bboxH;
+		int vl = victim.getX() + 3, vr = vl + bboxW, vb = victim.getY() + 10, vt = vb + bboxH;
+		
+		return (hl >= vl && hr <= vr && hb >= vb && ht <= vt) || // attack point inside bounding box
+				((between(al, ar, vl) || between(al, ar, vr)) && (between(ab, at, vb) || between(ab, at, vt)));
+	}
+	private void updatePositionK() {
+		K.setKnock(false);
 		if (pressedKeys.contains(KeyEvent.VK_F)) {
 			K.setVx(0);
 			if (pressedKeys.contains(KeyEvent.VK_D) ||
@@ -93,17 +150,37 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			else if (pressedKeys.contains(KeyEvent.VK_W))
 				K.jump();
 		}
-		
-		/*
-		if (pressedKeys.contains(KeyEvent.VK_D))
-			vx1 = 5;
-		if (pressedKeys.contains(KeyEvent.VK_D))
-			vx1 = 5;
-		if (pressedKeys.contains(KeyEvent.VK_D))
-			vx1 = 5;
-		if (pressedKeys.contains(KeyEvent.VK_D))
-			vx1 = 5;
-		*/
+	}
+	
+	private void updatePositionM() {
+		if (pressedKeys.contains(KeyEvent.VK_SHIFT)) {
+			M.setVx(0);
+			if (pressedKeys.contains(KeyEvent.VK_RIGHT) ||
+				pressedKeys.contains(KeyEvent.VK_LEFT) ||
+				pressedKeys.contains(KeyEvent.VK_UP)) {
+				M.setAttack(true);
+			} else {
+				M.setAttack(false);
+			}
+			
+			if (pressedKeys.contains(KeyEvent.VK_DOWN))
+				M.setVy(20);
+			else if (pressedKeys.contains(KeyEvent.VK_UP))
+				M.jump();
+		} else {
+			M.setAttack(false);
+			if (pressedKeys.contains(KeyEvent.VK_RIGHT))
+				M.setVx(5);
+			else if (pressedKeys.contains(KeyEvent.VK_LEFT))
+				M.setVx(-5);
+			else
+				M.setVx(0);
+			
+			if (pressedKeys.contains(KeyEvent.VK_DOWN))
+				M.setVy(20);
+			else if (pressedKeys.contains(KeyEvent.VK_UP))
+				M.jump();
+		}
 	}
 	
 	public static void main(String[] arg) {
@@ -154,9 +231,6 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	public void mousePressed(MouseEvent arg0) { // mouse clicking logic
 		// TODO Auto-generated method stub
 		
-	}
-	private boolean between(int lo, int hi, int x) { // helper function for checking if lo <= x <= hi
-		return lo <= x && x <= hi;
 	}
 	
 	@Override

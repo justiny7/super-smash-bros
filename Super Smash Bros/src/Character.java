@@ -17,11 +17,11 @@ public class Character {
 	
 	private int x, y; // coordinates
 	private int vx, vy, lst, offsetY, offsetX;
-	private int accel;
+	private int ax, ay;
 	private int jumpCnt;
 	private long lstJump;
 	
-	private boolean attack, tornado;
+	private boolean attack, knocked;
 	
 	private String name;
 
@@ -31,12 +31,12 @@ public class Character {
 		offsetY = offsetX = 0;
 		vx = vy = 0;
 		lst = 1;
-		accel = 0;
+		ay = 0;
+		ax = 1;
 		jumpCnt = 0;
 		lstJump = -1000;
 		
-		attack = false;
-		tornado = false;
+		attack = knocked = false;
 		
 		this.name = name;
 		
@@ -73,8 +73,15 @@ public class Character {
 			++jumpCnt;
 			lstJump = System.currentTimeMillis();
 			vy = -20;
-			accel = 1;
+			ay = 1;
 		}
+	}
+	public void setKnock(boolean knocked) {
+		this.knocked = knocked;
+	}
+	public void knockback(boolean right) {
+		vx = 10 * (right ? 1 : -1); // eventually, knockback depends on character percentage
+		knocked = true;
 	}
 	
 	public int getX() {
@@ -90,9 +97,24 @@ public class Character {
 		offsetY = 0;
 		vx = vy = 0;
 		lst = 1;
-		accel = 0;
+		ay = 0;
 		jumpCnt = 0;
 		lstJump = -1000;
+	}
+	public int[] attackPoint() {
+		if (!attack)
+			return new int[] {-10000, -10000};
+		
+		if (vy < 0) {
+			if (lst > 0)
+				return new int[] {x + 48, y - 15};
+			else
+				return new int[] {x - 5, y - 15};
+		} else if (lst > 0) {
+			return new int[] {x + 65, y + 25};
+		} else {
+			return new int[] {x - 27, y + 25};
+		}
 	}
 	public void setAttack(boolean b) {
 		attack = b;
@@ -108,23 +130,31 @@ public class Character {
 		// System.out.println(x + " " + y);
 		
 		// set correct sprite
-		if (tornado) {
-			img = getImage("/imgs/" + name + "tornado.gif");
-			offsetY = -13;
-			offsetX = 0;
-		} else if (attack) {
-			if (y < bottom) {
-				if (lst > 0)
-					img = getImage("imgs/" + name + "attackupright.gif");
-				else
-					img = getImage("imgs/" + name + "attackupleft.gif");
-				
-				offsetY = -28;
+		if (knocked) {
+			if (lst > 0) {
+				img = getImage("imgs/" + name + "idleright.gif");
+				offsetY = 0;
 				offsetX = 0;
+			} else {
+				img = getImage("imgs/" + name + "idleleft.gif");
+				offsetY = 0;
+				offsetX = 0;
+			}
+		} else if (attack) {
+			if (vy < 0) {
+				if (lst > 0) {
+					img = getImage("imgs/" + name + "attackupright.gif");
+					offsetX = -20;
+				} else {
+					img = getImage("imgs/" + name + "attackupleft.gif");
+					offsetX = -10;
+				}
+				
+				offsetY = -26;
 			}  else if (lst > 0) {
 				img = getImage("imgs/" + name + "attackright.gif");
 				offsetY = 0;
-				offsetX = 0;
+				offsetX = -9;
 			} else {
 				img = getImage("imgs/" + name + "attackleft.gif");
 				offsetY = 0;
@@ -168,15 +198,20 @@ public class Character {
 		
 		// handle change in acceleration
 		if (y == bottom && x >= left && x <= right) {
-			accel = 0;
+			ay = 0;
 			jumpCnt = 0;
 		} else if (y > bottom) {  // fall slower when below stadium
-			accel ^= 1;
+			ay ^= 1;
 		} else {
-			accel = 1;
+			ay = 1;
 		}
 
-		vy += accel;
+		vy += ay;
+		
+		if (vx < 0)
+			vx += ax;
+		else if (vx > 0)
+			vx -= ax;
 		
 		tx.setToTranslation(x + offsetX, y + offsetY);
 		tx.scale(scale, scale);
