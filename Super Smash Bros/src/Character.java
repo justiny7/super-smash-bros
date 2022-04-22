@@ -12,14 +12,14 @@ public class Character {
 	private AffineTransform tx;
 	private double scale = 2.0; // scales for images
 	
-	private final int width = 1456, height = 709;
 	private final int bottom = 460, left = 180, right = 1215;
 	
 	private int x, y; // coordinates
-	private int vx, vy, lst, offsetY, offsetX;
+	private int vx, vkx, vy, lst, offsetY, offsetX; // vkx = knockback velocity
 	private int ax, ay;
 	private int jumpCnt;
 	private long lstJump;
+	private double percentage;
 	
 	private boolean attack, knocked;
 	
@@ -29,12 +29,13 @@ public class Character {
 		setPosition(x, y);
 		
 		offsetY = offsetX = 0;
-		vx = vy = 0;
+		vx = vkx = vy = 0;
 		lst = 1;
 		ay = 0;
 		ax = 1;
 		jumpCnt = 0;
 		lstJump = -1000;
+		percentage = 0;
 		
 		attack = knocked = false;
 		
@@ -66,7 +67,7 @@ public class Character {
 		this.vy = vy;
 	}
 	public void jump() {
-		if (jumpCnt < 2 && System.currentTimeMillis() - lstJump > 250) {
+		if (jumpCnt < 2 && System.currentTimeMillis() - lstJump > 500) {
 			Music jump = new Music(name + "jump" + (1 + (int)(Math.random() * 1000000) % 3) + ".wav", false);
 			jump.play();
 			
@@ -80,8 +81,12 @@ public class Character {
 		this.knocked = knocked;
 	}
 	public void knockback(boolean right) {
-		vx = 10 * (right ? 1 : -1); // eventually, knockback depends on character percentage
+		percentage += (Math.random() * 5) + 2.5;
+		vkx = (int)(12 * (1 + 0.01 * percentage) * (right ? 1 : -1)); // eventually, knockback depends on character percentage
 		knocked = true;
+	}
+	public boolean isRight() {
+		return lst > 0;
 	}
 	
 	public int getX() {
@@ -95,11 +100,12 @@ public class Character {
 		this.x = x;
 		this.y = y;
 		offsetY = 0;
-		vx = vy = 0;
+		vx = vy = vkx = 0;
 		lst = 1;
-		ay = 0;
+		ay = ax = 0;
 		jumpCnt = 0;
 		lstJump = -1000;
+		percentage = 0;
 	}
 	public int[] attackPoint() {
 		if (!attack)
@@ -119,6 +125,9 @@ public class Character {
 	public void setAttack(boolean b) {
 		attack = b;
 	}
+	public double getPercentage() {
+		return percentage;
+	}
 	public void reset(int x, int y) {
 		setPosition(x, y);
 	}
@@ -126,9 +135,7 @@ public class Character {
 		tx.setToTranslation(a, b);
 		tx.scale(scale, scale);
 	}
-	private void update() {
-		// System.out.println(x + " " + y);
-		
+	private void update() {	
 		// set correct sprite
 		if (knocked) {
 			if (lst > 0) {
@@ -180,14 +187,14 @@ public class Character {
 		
 		// handle change in x		
 		if (y <= bottom)
-			x += vx;
+			x += vx + vkx;
 		else { // bounding box under sides of stadium
-			if (x < left && x + vx >= left)
+			if (x < left && x + vx + vkx >= left)
 				x = left - 1;
-			else if (x > right && x + vx <= right)
+			else if (x > right && x + vx + vkx <= right)
 				x = right + 1;
 			else
-				x += vx;
+				x += vx + vkx;
 		}
 		
 		// handle change in y
@@ -208,10 +215,12 @@ public class Character {
 
 		vy += ay;
 		
-		if (vx < 0)
-			vx += ax;
-		else if (vx > 0)
-			vx -= ax;
+		if (vkx < 0)
+			vkx += ax;
+		else if (vkx > 0)
+			vkx -= ax;
+		
+		ax ^= 1;
 		
 		tx.setToTranslation(x + offsetX, y + offsetY);
 		tx.scale(scale, scale);

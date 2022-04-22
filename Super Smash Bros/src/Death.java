@@ -17,16 +17,12 @@ public class Death {
 	private final int pw = (int)(524 * scale), ph = (int)(156 * scale); // picture width/height
 	private int imageCnt = 0;
 	
-	public Death() {		
-		//y += (int)(300 * Math.sin(angle));
-		//x += (int)(300 * Math.cos(angle));
-		
+	public Death() {
 		img[0] = getImage("/imgs/ringdeath.gif"); // load the image for Tree
 		tx = AffineTransform.getTranslateInstance(0, 0);
 	}
 	
 	public void paint(Graphics g, int x, int y) {
-		// these are the 2 lines of code needed draw an image on the screen
 		Graphics2D g2 = (Graphics2D) g;
 		
 		update(x, y);

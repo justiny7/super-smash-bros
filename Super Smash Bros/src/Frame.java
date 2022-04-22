@@ -3,6 +3,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -16,6 +17,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 
 import javax.swing.JButton;
@@ -26,7 +29,6 @@ import javax.swing.Timer;
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener, MouseMotionListener {
 	// game properties
 	private final int width = 1456, height = 849;
-	private final int bottom = 290, left = 95, right = 1170;
 	private final long knockbackDelay = 200;
 	private final int bboxW = 42, bboxH = 40;
 	
@@ -35,16 +37,14 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private boolean resetDeath = false;
 	
 	// images + music
-	Character K = new Character(spawnL, spawnH, "k"); // Kirby
-	Character M = new Character(spawnR, spawnH, "k"); // Meta Knight
-	Death DK = new Death(), DM = new Death();
-	Background B = new Background(0, 0);
+	private Character K = new Character(spawnL, spawnH, "k"); // Kirby
+	private Character M = new Character(spawnR, spawnH, "k"); // Meta Knight
+	private Death DK = new Death(), DM = new Death();
+	private Background B = new Background(0, 0);
+	private Picture KP = new Picture("/imgs/kirby.png", 0.5, spawnL - 155, 635);
+	private Picture MP = new Picture("/imgs/metaknight.png", 0.45, spawnR - 185, 595);
 	
-	// character properties
 	
-	private int rand(int lo, int hi) { // random number between lo and hi
-		return (int)(Math.random() * (hi - lo + 1)) + lo;
-	}
 	private long now() {
 		return System.currentTimeMillis();
 	}
@@ -53,10 +53,33 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		B.paint(g);
 		K.paint(g);
 		M.paint(g);
+		KP.paint(g);
+		MP.paint(g);
 		
-		show(K, g);
-		show(M, g);
+		show(K, 1, g);
+		show(M, 0, g);
 		
+	    try {
+	    	g.setColor(Color.WHITE);
+	    	
+			Font f = Font.createFont(Font.TRUETYPE_FONT, new File("PressStart2P.ttf")).deriveFont(30f);
+			g.setFont(f);
+			g.drawString(String.format("%.1f%%", K.getPercentage()), spawnL - 10, 680);
+			g.drawString(String.format("%.1f%%", M.getPercentage()), spawnR + 30, 680);
+			
+			f = Font.createFont(Font.TRUETYPE_FONT, new File("PressStart2P.ttf")).deriveFont(20f);
+			g.setFont(f);
+			g.drawString("Kirby", spawnL - 10, 710);
+			g.drawString("Meta Knight", spawnR + 30, 710);
+
+		} catch (FontFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		if (K.getY() > height + 500) {
 			if (!resetDeath) {
 				Music death = new Music("kosound.wav", false);
@@ -65,8 +88,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 				resetDeath = true;
 			}
 			DK.paint(g, K.getX(), K.getY());
-		} else if (hit(M, K)) {
-			System.out.println("M hit K!");
+		} else if (hit(M, K) && now() - lstK > 100) {
+			K.knockback(M.isRight());
+			lstK = now();
 		} else if (now() - lstK > knockbackDelay) {
 			updatePositionK();
 		}
@@ -85,8 +109,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 				resetDeath = true;
 			}
 			DM.paint(g, M.getX(), M.getY());
-		} else if (hit(K, M)) {
-			System.out.println("K hit M!");
+		} else if (hit(K, M) && now() - lstM > 100) {
+			M.knockback(K.isRight());
+			lstM = now();
 		} else if (now() - lstM > knockbackDelay) {
 			updatePositionM();
 		}
@@ -97,10 +122,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		}
 	}
 	
-	private void show(Character c, Graphics g) {
+	private void show(Character c, int col, Graphics g) {
 		// show bounding box + attack point
 		int[] pt = c.attackPoint();
-		g.setColor(Color.red);
+		g.setColor((col == 0) ? Color.red : Color.blue);
 		g.fillRect(pt[0], pt[1], 10, 10);
 		g.drawRect(c.getX() + 3, c.getY() + 10, bboxW, bboxH);
 	}
@@ -118,7 +143,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		int vl = victim.getX() + 3, vr = vl + bboxW, vb = victim.getY() + 10, vt = vb + bboxH;
 		
 		return (hl >= vl && hr <= vr && hb >= vb && ht <= vt) || // attack point inside bounding box
-				((between(al, ar, vl) || between(al, ar, vr)) && (between(ab, at, vb) || between(ab, at, vt)));
+				((between(al, ar, vl) || between(al, ar, vr)) && (between(ab, at, vb) || between(ab, at, vt))); // characters' bounding boxes intersect
 	}
 	private void updatePositionK() {
 		K.setKnock(false);
@@ -153,7 +178,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	}
 	
 	private void updatePositionM() {
-		if (pressedKeys.contains(KeyEvent.VK_SHIFT)) {
+		M.setKnock(false);
+		if (pressedKeys.contains(KeyEvent.VK_ENTER)) {
 			M.setVx(0);
 			if (pressedKeys.contains(KeyEvent.VK_RIGHT) ||
 				pressedKeys.contains(KeyEvent.VK_LEFT) ||
