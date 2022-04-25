@@ -38,7 +38,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	
 	// images + music
 	private Character K = new Character(spawnL, spawnH, "k"); // Kirby
-	private Character M = new Character(spawnR, spawnH, "k"); // Meta Knight
+	private Character M = new Character(spawnR, spawnH, "m"); // Meta Knight
 	private Death DK = new Death(), DM = new Death();
 	private Background B = new Background(0, 0);
 	private Picture KP = new Picture("/imgs/kirby.png", 0.5, spawnL - 155, 635);
@@ -56,8 +56,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		KP.paint(g);
 		MP.paint(g);
 		
-		show(K, 1, g);
-		show(M, 0, g);
+		show(K, 0, g);
+		show(M, 1, g);
 		
 	    try {
 	    	g.setColor(Color.WHITE);
