@@ -34,7 +34,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	
 	private int spawnL = 445, spawnR = 948, spawnH = height / 5;
 	private long lstK = -1000, lstM = -1000;
-	private boolean resetDeath = false;
+	private boolean resetDeath = false, gameOver = false;
+	
+	private int KLives = 3, MLives = 3;
 	
 	// images + music
 	private Character K = new Character(spawnL, spawnH, "k"); // Kirby
@@ -43,6 +45,12 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private Background B = new Background(0, 0);
 	private Picture KP = new Picture("/imgs/kirby.png", 0.5, spawnL - 155, 635);
 	private Picture MP = new Picture("/imgs/metaknight.png", 0.45, spawnR - 185, 595);
+	private Picture[] KLife = {new Picture("/imgs/kirbylives.png", 0.08, spawnL - 10, 720),
+			new Picture("/imgs/kirbylives.png", 0.08, spawnL + 30, 720),
+			new Picture("/imgs/kirbylives.png", 0.08, spawnL + 70, 720)};
+	private Picture[] MLife = {new Picture("/imgs/metaknightlives.png", 0.11, spawnR + 30, 722),
+			new Picture("/imgs/metaknightlives.png", 0.11, spawnR + 70, 722),
+			new Picture("/imgs/metaknightlives.png", 0.11, spawnR + 110, 722)};
 	
 	
 	private long now() {
@@ -55,6 +63,11 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		M.paint(g);
 		KP.paint(g);
 		MP.paint(g);
+		
+		for (int i = 0; i < MLives; ++i)
+			MLife[i].paint(g);
+		for (int i = 0; i < KLives; ++i)
+			KLife[i].paint(g);
 		
 		show(K, 0, g);
 		show(M, 1, g);
@@ -79,15 +92,29 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	    
+	    if (gameOver)
+	    	return;
 
 		if (K.getY() > height + 500) {
 			if (!resetDeath) {
-				Music death = new Music("kosound.wav", false);
-				death.play();
-				DK.reset();
-				resetDeath = true;
+				--KLives;
+				
+				if (KLives > 0) {
+					Music death = new Music("kosound.wav", false);
+					death.play();
+					DK.reset();
+					resetDeath = true;
+				} else {
+					Music death = new Music("deathsound.wav", false);
+					death.play();
+					DK.reset();
+					resetDeath = true;
+				}
 			}
-			DK.paint(g, K.getX(), K.getY());
+			
+			if (!gameOver)
+				DK.paint(g, K.getX(), K.getY());
 		} else if (hit(M, K) && now() - lstK > 100) {
 			K.knockback(M.isRight());
 			lstK = now();
@@ -96,19 +123,36 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		}
 		
 		if (K.getY() > height + 8000) {
-			resetDeath = false;
-			K.reset(spawnL, spawnH);
+			if (KLives > 0) {
+				resetDeath = false;
+				K.reset(spawnL, spawnH);
+			} else {
+				gameOver = true;
+				K.freeze();
+				M.freeze();
+			}
 		}
 		
 		
 		if (M.getY() > height + 500) {
 			if (!resetDeath) {
-				Music death = new Music("kosound.wav", false);
-				death.play();
-				DM.reset();
-				resetDeath = true;
+				--MLives;
+				
+				if (MLives > 0) {
+					Music death = new Music("kosound.wav", false);
+					death.play();
+					DM.reset();
+					resetDeath = true;
+				} else {
+					Music death = new Music("deathsound.wav", false);
+					death.play();
+					DM.reset();
+					resetDeath = true;
+				}
 			}
-			DM.paint(g, M.getX(), M.getY());
+			
+			if (!gameOver)
+				DM.paint(g, M.getX(), M.getY());
 		} else if (hit(K, M) && now() - lstM > 100) {
 			M.knockback(K.isRight());
 			lstM = now();
@@ -117,8 +161,14 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		}
 		
 		if (M.getY() > height + 8000) {
-			resetDeath = false;
-			M.reset(spawnR, spawnH);
+			if (MLives > 0) {
+				resetDeath = false;
+				M.reset(spawnR, spawnH);
+			} else {
+				gameOver = true;
+				K.freeze();
+				M.freeze();
+			}
 		}
 	}
 	
@@ -181,30 +231,30 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		M.setKnock(false);
 		if (pressedKeys.contains(KeyEvent.VK_ENTER)) {
 			M.setVx(0);
-			if (pressedKeys.contains(KeyEvent.VK_RIGHT) ||
-				pressedKeys.contains(KeyEvent.VK_LEFT) ||
-				pressedKeys.contains(KeyEvent.VK_UP)) {
+			if (pressedKeys.contains(KeyEvent.VK_QUOTE) ||
+				pressedKeys.contains(KeyEvent.VK_L) ||
+				pressedKeys.contains(KeyEvent.VK_P)) {
 				M.setAttack(true);
 			} else {
 				M.setAttack(false);
 			}
 			
-			if (pressedKeys.contains(KeyEvent.VK_DOWN))
+			if (pressedKeys.contains(KeyEvent.VK_SEMICOLON))
 				M.setVy(20);
-			else if (pressedKeys.contains(KeyEvent.VK_UP))
+			else if (pressedKeys.contains(KeyEvent.VK_P))
 				M.jump();
 		} else {
 			M.setAttack(false);
-			if (pressedKeys.contains(KeyEvent.VK_RIGHT))
+			if (pressedKeys.contains(KeyEvent.VK_QUOTE))
 				M.setVx(5);
-			else if (pressedKeys.contains(KeyEvent.VK_LEFT))
+			else if (pressedKeys.contains(KeyEvent.VK_L))
 				M.setVx(-5);
 			else
 				M.setVx(0);
 			
-			if (pressedKeys.contains(KeyEvent.VK_DOWN))
+			if (pressedKeys.contains(KeyEvent.VK_SEMICOLON))
 				M.setVy(20);
-			else if (pressedKeys.contains(KeyEvent.VK_UP))
+			else if (pressedKeys.contains(KeyEvent.VK_P))
 				M.jump();
 		}
 	}

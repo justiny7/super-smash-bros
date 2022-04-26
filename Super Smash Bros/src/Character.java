@@ -74,10 +74,8 @@ public class Character {
 	}
 	public void jump() {
 		if (jumpCnt < 2 && System.currentTimeMillis() - lstJump > 500) {
-			if (name.equals("k")) {
-				Music jump = new Music(name + "jump" + (1 + (int)(Math.random() * 1000000) % 3) + ".wav", false);
-				jump.play();
-			}
+			Music jump = new Music(name + "jump" + (1 + (int)(Math.random() * 1000000) % 3) + ".wav", false);
+			jump.play();
 			
 			++jumpCnt;
 			lstJump = System.currentTimeMillis();
@@ -93,6 +91,9 @@ public class Character {
 		vkx = (int)(12 * (1 + 0.01 * percentage) * (right ? 1 : -1)); // eventually, knockback depends on character percentage
 		knocked = true;
 	}
+	public void freeze() {
+		vx = vkx = vy = ax = ay = 0;
+	}
 	public boolean isRight() {
 		return lst > 0;
 	}
@@ -107,7 +108,6 @@ public class Character {
 	public void setPosition(int x, int y) {
 		this.x = x;
 		this.y = y;
-		offsetY = 0;
 		vx = vy = vkx = 0;
 		lst = (name.equals("m") ? -1 : 1);
 		ay = ax = 0;
@@ -152,13 +152,23 @@ public class Character {
 		// set correct sprite
 		if (knocked) {
 			if (lst > 0) {
-				img = getImage("imgs/" + name + "idleright.gif");
-				offsetY = 0;
-				offsetX = 0;
+				img = getImage("/imgs/" + name + "idleright.gif");
+				if (name.equals("k")) {
+					offsetY = 0;
+					offsetX = 0;
+				} else {
+					offsetY = -100;
+					offsetX = -175;
+				}
 			} else {
-				img = getImage("imgs/" + name + "idleleft.gif");
-				offsetY = 0;
-				offsetX = 0;
+				img = getImage("/imgs/" + name + "idleleft.gif");
+				if (name.equals("k")) {
+					offsetY = 0;
+					offsetX = 0;
+				} else {
+					offsetY = -100;
+					offsetX = -185;
+				}
 			}
 		} else if (attack) {
 			if (vy < 0) {
@@ -173,7 +183,7 @@ public class Character {
 					if (name.equals("k"))
 						offsetX = -10;
 					else
-						; // DO ATTACKUPLEFT
+						offsetX = 8;
 				}
 				
 				if (name.equals("k"))
@@ -205,7 +215,7 @@ public class Character {
 				offsetY = -5;
 				offsetX = 0;
 			} else {
-				offsetY = -15;
+				offsetY = 0;
 				offsetX = 10;
 			}
 		} else if (vx < 0) {
@@ -213,19 +223,26 @@ public class Character {
 			if (name.equals("k"))
 				offsetY = -5;
 			else
-				offsetY = -15;
+				offsetY = 0;
 			offsetX = 0;
 		} else if (lst > 0) {
 			img = getImage("/imgs/" + name + "idleright.gif");
-			offsetY = 0;
-			if (name.equals("k"))
+			if (name.equals("k")) {
+				offsetY = 0;
 				offsetX = 0;
-			else
-				offsetX = 10;
+			} else {
+				offsetY = -100;
+				offsetX = -175;
+			}
 		} else {
 			img = getImage("/imgs/" + name + "idleleft.gif");
-			offsetY = 0;
-			offsetX = 0;
+			if (name.equals("k")) {
+				offsetY = 0;
+				offsetX = 0;
+			} else {
+				offsetY = -100;
+				offsetX = -185;
+			}
 		}
 		
 		// handle change in x		
