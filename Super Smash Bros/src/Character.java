@@ -19,6 +19,8 @@ public class Character {
 	private int ax, ay;
 	private int jumpCnt;
 	private long lstJump;
+	private int hitCnt;
+	private long lstHit;
 	private double percentage;
 	
 	private boolean attack, knocked;
@@ -34,7 +36,9 @@ public class Character {
 		jumpCnt = 0;
 		lstJump = -1000;
 		percentage = 0;
-		
+		hitCnt = 0;
+		lstHit = 0;
+
 		attack = knocked = false;
 		
 		this.name = name;
@@ -87,8 +91,20 @@ public class Character {
 		this.knocked = knocked;
 	}
 	public void knockback(boolean right) {
-		percentage += (Math.random() * 5) + 2.5;
-		vkx = (int)(12 * (1 + 0.01 * percentage) * (right ? 1 : -1)); // eventually, knockback depends on character percentage
+		if (now() - lstHit < 1500)
+			++hitCnt;
+		else
+			hitCnt = 0;
+		
+		double mult = 5.0;
+		if (hitCnt == 3) {
+			mult = 25.0;
+			hitCnt = 0;
+		}
+		lstHit = now();
+		
+		percentage += (Math.random() * mult) + 2.5;
+		vkx = (int)(12 * (1 + 0.01 * percentage * 2) * (right ? 1 : -1));
 		knocked = true;
 	}
 	public void freeze() {
@@ -114,6 +130,8 @@ public class Character {
 		jumpCnt = 0;
 		lstJump = -1000;
 		percentage = 0;
+		hitCnt = 0;
+		lstHit = 0;
 	}
 	public int[] attackPoint() {
 		if (!attack)
@@ -284,6 +302,9 @@ public class Character {
 		
 		tx.setToTranslation(x + offsetX + charOffset, y + offsetY);
 		tx.scale(scale, scale);
+	}
+	private long now() {
+		return System.currentTimeMillis();
 	}
 	private Image getImage(String path) {
 		Image tempImage = null;

@@ -51,6 +51,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private Picture[] MLife = {new Picture("/imgs/metaknightlives.png", 0.11, spawnR + 30, 722),
 			new Picture("/imgs/metaknightlives.png", 0.11, spawnR + 70, 722),
 			new Picture("/imgs/metaknightlives.png", 0.11, spawnR + 110, 722)};
+	private Picture game = new Picture("/imgs/gameover.png", 2.0, 60, 0);
 	
 	
 	private long now() {
@@ -64,24 +65,30 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		KP.paint(g);
 		MP.paint(g);
 		
+		if (gameOver)
+			game.paint(g);
+		
 		for (int i = 0; i < MLives; ++i)
 			MLife[i].paint(g);
 		for (int i = 0; i < KLives; ++i)
 			KLife[i].paint(g);
 		
-		show(K, 0, g);
-		show(M, 1, g);
+		// show(K, 0, g);
+		// show(M, 1, g);
 		
-	    try {
-	    	g.setColor(Color.WHITE);
-	    	
+	    try {    	
 			Font f = Font.createFont(Font.TRUETYPE_FONT, new File("PressStart2P.ttf")).deriveFont(30f);
 			g.setFont(f);
+			g.setColor(Color.WHITE);
+			
+			g.setColor(getColor(K.getPercentage()));
 			g.drawString(String.format("%.1f%%", K.getPercentage()), spawnL - 10, 680);
+			g.setColor(getColor(M.getPercentage()));
 			g.drawString(String.format("%.1f%%", M.getPercentage()), spawnR + 30, 680);
 			
 			f = Font.createFont(Font.TRUETYPE_FONT, new File("PressStart2P.ttf")).deriveFont(20f);
 			g.setFont(f);
+			g.setColor(Color.WHITE);
 			g.drawString("Kirby", spawnL - 10, 710);
 			g.drawString("Meta Knight", spawnR + 30, 710);
 
@@ -122,6 +129,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			updatePositionK();
 		}
 		
+		if (K.getY() > height + 4500 && KLives == 0)
+			game.paint(g);
 		if (K.getY() > height + 8000) {
 			if (KLives > 0) {
 				resetDeath = false;
@@ -130,6 +139,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 				gameOver = true;
 				K.freeze();
 				M.freeze();
+				return;
 			}
 		}
 		
@@ -160,6 +170,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			updatePositionM();
 		}
 		
+		if (M.getY() > height + 4500 && MLives == 0)
+			game.paint(g);
 		if (M.getY() > height + 8000) {
 			if (MLives > 0) {
 				resetDeath = false;
@@ -168,8 +180,17 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 				gameOver = true;
 				K.freeze();
 				M.freeze();
+				return;
 			}
 		}
+	}
+	
+	private Color getColor(double p) {
+		// H = 60, S = 0, V = 1.0
+		if (p < 20) // S goes from 0 - 1.0
+			return Color.getHSBColor((float)(1.0 / 6), (float)(p / 20.0), 1);
+		else // H drops to 0
+			return Color.getHSBColor((float)(Math.max(0.0, 60.0 - (p - 20.0) * .6) / 360), 1, 1);
 	}
 	
 	private void show(Character c, int col, Graphics g) {
