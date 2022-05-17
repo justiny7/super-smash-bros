@@ -44,7 +44,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private Death DK = new Death(), DM = new Death();
 	private Background B = new Background(0, 0);
 	private Picture KP = new Picture("/imgs/kirby.png", 0.5, spawnL - 155, 635);
-	private Picture MP = new Picture("/imgs/metaknight.png", 0.45, spawnR - 185, 595);
+	private Picture MP = new Picture("/imgs/metaknight.png", 0.45, spawnR - 185, 600);
 	private Picture[] KLife = {new Picture("/imgs/kirbylives.png", 0.08, spawnL - 10, 720),
 			new Picture("/imgs/kirbylives.png", 0.08, spawnL + 30, 720),
 			new Picture("/imgs/kirbylives.png", 0.08, spawnL + 70, 720)};
@@ -123,6 +123,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			if (!gameOver)
 				DK.paint(g, K.getX(), K.getY());
 		} else if (hit(M, K) && now() - lstK > 100) {
+			Music punch = new Music("punch.wav", false);
+			punch.play();
+			
 			K.knockback(M.isRight());
 			lstK = now();
 		} else if (now() - lstK > knockbackDelay) {
@@ -164,6 +167,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			if (!gameOver)
 				DM.paint(g, M.getX(), M.getY());
 		} else if (hit(K, M) && now() - lstM > 100) {
+			Music punch = new Music("punch.wav", false);
+			punch.play();
+			
 			M.knockback(K.isRight());
 			lstM = now();
 		} else if (now() - lstM > knockbackDelay) {
@@ -193,6 +199,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			return Color.getHSBColor((float)(Math.max(0.0, 60.0 - (p - 20.0) * .6) / 360), 1, 1);
 	}
 	
+	@SuppressWarnings("unused")
 	private void show(Character c, int col, Graphics g) {
 		// show bounding box + attack point
 		int[] pt = c.attackPoint();
