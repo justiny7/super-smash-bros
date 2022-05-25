@@ -26,7 +26,8 @@ public class Character {
 	private boolean attack, knocked;
 	
 	private String name;
-
+	
+	// Constructor: initial position + name ("m" or "k" for Meta Knight or Kirby)
 	public Character(int x, int y, String name) {	
 		offsetY = offsetX = 0;
 		vx = vkx = vy = 0;
@@ -44,6 +45,7 @@ public class Character {
 		this.name = name;
 		setPosition(x, y);
 		
+		// sets the correct sprite given the name
 		if (name.equals("k")) {
 			charOffset = 0;
 			scale = 2.0;
@@ -59,7 +61,8 @@ public class Character {
 		tx = AffineTransform.getTranslateInstance(0, 0);
 		init(x, y);
 	}
-
+	
+	// paint function
 	public void paint(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;
 		
@@ -67,6 +70,7 @@ public class Character {
 		g2.drawImage(img, tx, null);
 	}
 	
+	// setters for x and y velocities
 	public void setVx(int vx) {
 		if (vx != 0)
 			lst = this.vx;
@@ -75,9 +79,12 @@ public class Character {
 	public void setVy(int vy) {
 		this.vy = vy;
 	}
+	
+	// handles logic for jumping + double jumping
 	public void jump() {
 		if (jumpCnt < 2 && System.currentTimeMillis() - lstJump > 500) {
-			Music jump = new Music(name + "jump" + (1 + (int)(Math.random() * 1000000) % 3) + ".wav", false);
+			Music jump = new Music(name + "jump" +
+					(1 + (int)(Math.random() * 1000000) % 3) + ".wav", false);
 			jump.play();
 			
 			++jumpCnt;
@@ -86,9 +93,12 @@ public class Character {
 			ay = 1;
 		}
 	}
+	
+	// setter for whether the player is become knocked back
 	public void setKnock(boolean knocked) {
 		this.knocked = knocked;
 	}
+	// handles knockback movement + updates percentage
 	public void knockback(boolean right) {
 		if (now() - lstHit < 1500)
 			++hitCnt;
@@ -106,13 +116,17 @@ public class Character {
 		vkx = (int)(12 * (1 + 0.01 * percentage * 2) * (right ? 1 : -1));
 		knocked = true;
 	}
+	
+	// stops the player's motion
 	public void freeze() {
 		vx = vkx = vy = ax = ay = 0;
 	}
+	// checks if the player is facing right
 	public boolean isRight() {
 		return lst > 0;
 	}
 	
+	// getters for player position
 	public int getX() {
 		return x;
 	}
@@ -120,6 +134,7 @@ public class Character {
 		return y;
 	}
 	
+	// resets the player to a certain position
 	public void setPosition(int x, int y) {
 		this.x = x;
 		this.y = y;
@@ -132,6 +147,8 @@ public class Character {
 		hitCnt = 0;
 		lstHit = 0;
 	}
+	
+	// returns a pair of coordinates for the player's attacking bounding box
 	public int[] attackPoint() {
 		if (!attack)
 			return new int[] {-10000, -10000};
@@ -147,12 +164,17 @@ public class Character {
 			return new int[] {x - 27, y + 25};
 		}
 	}
+	
+	// setter for whether the player is attacking
 	public void setAttack(boolean b) {
 		attack = b;
 	}
+	// getter for percentage
 	public double getPercentage() {
 		return percentage;
 	}
+	
+	// resets the player to a certain position
 	public void reset(int x, int y) {
 		if (name.equals("k"))
 			img = getImage("/imgs/kidleright.gif");
@@ -161,10 +183,14 @@ public class Character {
 		
 		setPosition(x, y);
 	}
+	
+	// initialization function
 	private void init(double a, double b) {
 		tx.setToTranslation(a, b);
 		tx.scale(scale, scale);
 	}
+	
+	// updates character movement
 	private void update() {	
 		// set correct sprite
 		if (knocked) {
@@ -302,9 +328,13 @@ public class Character {
 		tx.setToTranslation(x + offsetX + charOffset, y + offsetY);
 		tx.scale(scale, scale);
 	}
+	
+	// helper function to get current time
 	private long now() {
 		return System.currentTimeMillis();
 	}
+	
+	// helper function to retrieve an image
 	private Image getImage(String path) {
 		Image tempImage = null;
 		try {
