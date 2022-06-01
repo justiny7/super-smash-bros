@@ -227,7 +227,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	// Returns color given percentage
 	private Color getColor(double p) {
 		// H = 60, S = 0, V = 1.0
-		if (p < 20) // S goes from 0 - 1.0
+		if (p < 20) // S goes from 0 to 1.0
 			return Color.getHSBColor((float)(1.0 / 6), (float)(p / 20.0), 1);
 		else // H drops to 0
 			return Color.getHSBColor((float)(Math.max(0.0, 60.0 - (p - 20.0) * .6) / 360), 1, 1);

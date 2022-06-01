@@ -8,6 +8,7 @@ import java.awt.geom.AffineTransform;
 import java.net.URL;
 
 public class Picture {
+	// Helper class to load in static images
 	private Image img; 	
 	private AffineTransform tx;
 	private double scale = 0.5; // image scale
@@ -19,13 +20,12 @@ public class Picture {
 		this.y = y;
 		this.scale = scale;
 		
-		img = getImage(image); // load the image for Tree
+		img = getImage(image);
 		tx = AffineTransform.getTranslateInstance(0, 0);
-		init(x, y); // initialize the location of the image
+		init(x, y);
 	}
 	
 	public void paint(Graphics g) {
-		// these are the 2 lines of code needed draw an image on the screen
 		Graphics2D g2 = (Graphics2D) g;
 		
 		update();
